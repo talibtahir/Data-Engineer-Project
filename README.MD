@@ -16,7 +16,9 @@ The ETL pipeline follows standard data engineering practices:
 
 * Python
 * Pandas
+* SQL
 * Jupyter Notebook
+* power Bi
 * Git & GitHub
 
 ### Dataset
@@ -79,10 +81,13 @@ The ETL pipeline follows standard data engineering practices:
 ## How to Run the Project
 
 * Clone the repository
-* Open ETL_2.ipynb in Jupyter Notebook
+* Open MAIN_ETL.ipynb in Jupyter Notebook
 * Install required libraries if not already installed:
 ```
 pip install pandas
+```
+```
+pip install oracledb
 ```
 * Run the notebook cells sequentially
 
@@ -95,8 +100,6 @@ pip install pandas
 
 ### Future Enhancements
 
-* Load data into a SQL database
 * Automate the pipeline using Airflow in future 
-* Add logging and error handling
 * Convert notebook into a Python script
 * Test the code on GCP Cloud
