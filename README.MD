@@ -99,3 +99,4 @@ pip install pandas
 * Automate the pipeline using Airflow in future 
 * Add logging and error handling
 * Convert notebook into a Python script
+* Test the code on GCP Cloud
