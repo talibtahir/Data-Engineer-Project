@@ -30,14 +30,13 @@ df.dtypes
 # Data Tranformation
 df.isna().sum()
 df["ROW_ID"] = df["ROW_ID"].astype(int) 
-df.ORDER_ID
-df.ORDER_DATE
 df["ORDER_DATE"] = pd.to_datetime(df["ORDER_DATE"])
 df["ORDER_DATE"].isna().sum()
 df["SHIP_DATE"] = pd.to_datetime(df["SHIP_DATE"])
+df['ORDER_DATE'] = df['ORDER_DATE'].dt.to_pydatetime()
+df['SHIP_DATE'] = df['SHIP_DATE'].dt.to_pydatetime()
 df.SHIP_DATE.isna().sum()
 df["SHIP_MODE"] = df["SHIP_MODE"].astype(str)
-df.columns 
 df.POSTAL_CODE = df["POSTAL_CODE"].fillna(0)
 df["SALES"] = (df["SALES"]
     .str.replace("$", '')
@@ -78,6 +77,7 @@ df['PAYMENT_ID'] = df.index
 df['PRODUCT_ID'] = df.index
 df['CUSTOMER_ID'] = df.index
 df
+
 # Fact and Dimension Schema 
 # * Dimension Table
 df.columns
@@ -129,8 +129,7 @@ dim_date = (
     ]]
 )
 dim_date
-dim_date['ORDER_DATE'] = dim_date['ORDER_DATE'].dt.to_pydatetime()
-dim_date['SHIP_DATE'] = dim_date['SHIP_DATE'].dt.to_pydatetime()
+
 # 4. Payments Dimention
 dim_Payments = (
     df[[
@@ -154,10 +153,11 @@ Fact_table = (
     ]]
 )
 Fact_table.head()
-Customers.to_csv("CUSTOMERS.csv", index=False)
-dim_date.to_csv("DATES.csv", index=False)
-dim_product.to_csv("PRODUCTS.csv", index=False)
-dim_Payments.to_csv("PAYMENTS.csv", index=False)
+# Customers.to_csv("CUSTOMERS.csv", index=False)
+# dim_date.to_csv("DATES.csv", index=False)
+# dim_product.to_csv("PRODUCTS.csv", index=False)
+# dim_Payments.to_csv("PAYMENTS.csv", index=False)
+# Fact_table.to_csv("FACT.CSV", index=False)
 ## Data load 
 def table_exists(cur, table_name):
     cur.execute("""
@@ -167,19 +167,10 @@ def table_exists(cur, table_name):
         """, [table_name.upper()]
     )
     return cur.fetchone()[0] == 1
-# cur.execute("drop table Customers")
-# conn.commit()
-# print("droped")
-# cur.execute("drop table Dates")
-# conn.commit()
-# print("droped")
-# cur.execute("drop table PAYMENTS")
-# conn.commit()
-# print("droped")
-# cur.execute("drop table products")
-# conn.commit()
-# cur.execute("drop table fact")
-# conn.commit()
+def data_exist(cur, table_name):
+    cur.execute(f"SELECT COUNT(*) FROM {table_name}")
+    count = cur.fetchone()[0]
+    return count > 0
 cur.execute(
     """
 select table_name 
@@ -189,7 +180,6 @@ where owner = 'HR'
 )
 for t in cur.fetchall():
     print(t[0])
-Customers
 ## 1 CUSTOMERS 
 if not table_exists(cur, 'CUSTOMERS'):
     cur.execute("""
@@ -224,7 +214,7 @@ Customers.POSTAL_CODE = Customers.POSTAL_CODE.astype('int')
 Customers.COUNTRY_RANK = Customers.COUNTRY_RANK.astype('float')
 Customers_records = list(Customers.itertuples(index=False, name=None))
 
-if not table_exists(cur, 'CUSTOMERS'):
+if not data_exist(cur, 'CUSTOMERS'):
     cur.executemany("""
     INSERT INTO CUSTOMERS(
                     CUSTOMER_ID, CUSTOMER_NAME, SEGMENT,
@@ -255,7 +245,7 @@ else:
     
 date_records = list(dim_date.itertuples(index=False, name= None))
 
-if not table_exists(cur, 'DATES'):
+if not data_exist(cur, 'DATES'):
     cur.executemany("""
     INSERT INTO DATES( DATE_ID, ORDER_DATE, SHIP_DATE,
                     YEAR, DAY_NAME, DELIVERY_DAYS, SHIPPING_COST)
@@ -284,7 +274,7 @@ else:
     print("Table Already Created")
 pay_records = list(dim_Payments.itertuples(index=False, name= None))
 
-if not table_exists(cur, 'PAYMENTS'):
+if not data_exist(cur, 'PAYMENTS'):
     cur.executemany("""
         INSERT INTO PAYMENTS(
                     PAYMENT_ID, SALES, 
@@ -315,7 +305,7 @@ else:
     print("Table Alreadt Exixt")
 product_records = list(dim_product.itertuples(index=False, name= None))
 
-if not table_exists(cur, 'PRODUCTS'):
+if not data_exist(cur, 'PRODUCTS'):
     cur.executemany("""
         INSERT INTO PRODUCTS(
                     PRODUCT_ID,
@@ -348,7 +338,7 @@ else:
     print("Table Already Created")
 fact_records = list(Fact_table.itertuples(index=False, name=None))
 
-if not table_exists(cur, 'FACT'):
+if not data_exist(cur, 'FACT'):
     cur.executemany("""
         INSERT INTO FACT(
                     ROW_ID, CUSTOMER_ID, PRODUCT_ID, DATE_ID, PAYMENT_ID
